@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+[ExecuteInEditMode]
 public class Hair : MonoBehaviour {
     private static int MAXIMUM_INSTANCE_COUNT = 1023;
     public Mesh mesh;
@@ -11,7 +12,7 @@ public class Hair : MonoBehaviour {
     // Use this for initialization
     void Start () {
         MeshFilter meshRenderer = GetComponent<MeshFilter>();
-        Mesh surfaceMesh = meshRenderer.mesh;
+        Mesh surfaceMesh = meshRenderer.sharedMesh;
 
         Vector3[] surfaceVertices = surfaceMesh.vertices;
         //Vector3[] surfaceVerticesNormals = surfaceMesh.normals;
