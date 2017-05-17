@@ -1,8 +1,8 @@
 ﻿Shader "Custom/Hair" {
 	Properties{
 		_MainTex("Texture", 2D) = "white" {}
-		length("length",Range(0.001,1)) = 0.04
-		width("width",Range(0.001,1)) = 0.02
+		Length("Length",Range(0.001,1)) = 0.04
+		Width("Width",Range(0.001,1)) = 0.02
 	}
 
 	SubShader{
@@ -34,97 +34,84 @@
 
 #include "UnityCG.cginc"
 
-#define lengthsq(x)	dot( (x), (x) )
-#define squared(x)	( (x)*(x) )
-
-			struct app2vert {
-				float4 LocalPos : POSITION;
-				float3 Normal : NORMAL;
+			struct appdata_hair {
+				float4 vertex : POSITION;
+				float3 normal : NORMAL;
 				float2 uv : TEXCOORD0;
 			};
 
-			struct vert2geo {
-				float4 WorldPos : POSITION;
-				float2 uv : TEXCOORD0;
-			};
-
-			struct FragData {
-				float4 ScreenPos : SV_POSITION;
+			struct v2f {
+				float4 screenPos : SV_POSITION;
 				float2 uv : TEXCOORD0;
 			};
 
 
 			sampler2D _MainTex;
-			float4 _MainTex_ST;
-			float length;
-			float width;
+			float Length;
+			float Width;
 
-			FragData MakeFragData(float3 offset, float3 input_WorldPos, float2 uv) {
-				FragData x = (FragData)0;
+			v2f MakeFragmentData(float3 offset, float3 vertex, float2 uv) {
+				v2f fragmentData = (v2f)0;
 
-				float3 x_WorldPos = mul(UNITY_MATRIX_V, float4(input_WorldPos,1)) + offset;
-				x.ScreenPos = mul(UNITY_MATRIX_P, float4(x_WorldPos,1));
-				x.uv = uv;
-				return x;
+				float3 worldPos = mul(UNITY_MATRIX_V, float4(vertex,1)) + offset;
+				fragmentData.screenPos = mul(UNITY_MATRIX_P, float4(worldPos, 1));
+				fragmentData.uv = uv;
+				return fragmentData;
 			}
 
 #ifdef GEOMETRY_TRIANGULATION
-			vert2geo vert(app2vert v) {
-				vert2geo o;
+			v2f vert(appdata_hair hairData) {
+				v2f fragmentData;
 
-				float4 LocalPos = v.LocalPos;
-				o.WorldPos = mul(unity_ObjectToWorld, LocalPos);
-				o.uv = v.uv;
+				fragmentData.screenPos = mul(unity_ObjectToWorld, hairData.vertex);
+				fragmentData.uv = hairData.uv;
 
-				return o;
+				return fragmentData;
 			}
 #endif
 
 #ifdef VERTEX_TRIANGULATION
-			FragData vert(app2vert v) {
-				float4 localPos = v.LocalPos;
+			v2f vert(appdata_hair hairData) {
+				float4 localPos = hairData.vertex;
 				float3 worldPos = mul(unity_ObjectToWorld, localPos);
 
-				FragData o;
-				o = MakeFragData(v.Normal, worldPos, v.uv);
-
-				return o;
+				return MakeFragmentData(hairData.normal, worldPos, hairData.uv);
 			}
 #endif
 
 #ifdef GEOMETRY_TRIANGULATION
 #if POINT_TOPOLOGY
 			[maxvertexcount(9)]
-			void geom(point vert2geo _input[1], inout TriangleStream<FragData> OutputStream) {
-				int v = 0;
+			void geom(point appdata_hair _input[1], inout TriangleStream<v2f> OutputStream) {
+				int index = 0;
 #else
 			[maxvertexcount(9)]
-			void geom(triangle vert2geo _input[3], inout TriangleStream<FragData> OutputStream) {
+			void geom(triangle appdata_hair _input[3], inout TriangleStream<v2f> OutputStream) {
 				//	non-shared vertex in triangles is 2nd
-				int v = 1;
+				int index = 1;
 #endif
-				vert2geo input = _input[v];
+				appdata_hair input = _input[index];
 
-				float halfLocalWidth = width * 0.5f;
-				float halfLocalHeight = length * 0.5f;
+				float halfLocalWidth = Width * 0.5f;
+				float halfLocalHeight = Length * 0.5f;
 
 				// Add four vertices to the output stream that will be drawn as a triangle strip making a quad
-				FragData vertex = MakeFragData(float3(-halfLocalWidth,-halfLocalHeight,0), input.WorldPos, input.uv);
-				OutputStream.Append(vertex);
+				v2f fragmentData = MakeFragmentData(float3(-halfLocalWidth,-halfLocalHeight,0), input.vertex, input.uv);
+				OutputStream.Append(fragmentData);
 
-				vertex = MakeFragData(float3(halfLocalWidth,-halfLocalHeight,0), input.WorldPos, input.uv);
-				OutputStream.Append(vertex);
+				fragmentData = MakeFragmentData(float3(halfLocalWidth,-halfLocalHeight,0), input.vertex, input.uv);
+				OutputStream.Append(fragmentData);
 
-				vertex = MakeFragData(float3(-halfLocalWidth, halfLocalHeight,0), input.WorldPos, input.uv);
-				OutputStream.Append(vertex);
+				fragmentData = MakeFragmentData(float3(-halfLocalWidth, halfLocalHeight,0), input.vertex, input.uv);
+				OutputStream.Append(fragmentData);
 
-				vertex = MakeFragData(float3(halfLocalWidth, halfLocalHeight, 0), input.WorldPos, input.uv);
-				OutputStream.Append(vertex);
+				fragmentData = MakeFragmentData(float3(halfLocalWidth, halfLocalHeight, 0), input.vertex, input.uv);
+				OutputStream.Append(fragmentData);
 
 			}
 #endif//GEOMETRY_TRIANGULATION
 
-			fixed4 frag(FragData i) : SV_Target{
+			fixed4 frag(v2f i) : SV_Target{
 				// sample the texture
 				return tex2D(_MainTex, i.uv);
 			}
