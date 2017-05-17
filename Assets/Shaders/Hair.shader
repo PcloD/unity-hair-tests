@@ -1,7 +1,8 @@
 ﻿Shader "Custom/Hair" {
 	Properties{
 		_MainTex("Texture", 2D) = "white" {}
-		ParticleSize("ParticleSize",Range(0.001,1)) = 0.1
+		length("length",Range(0.001,1)) = 0.04
+		width("width",Range(0.001,1)) = 0.02
 	}
 
 	SubShader{
@@ -55,10 +56,11 @@
 
 			sampler2D _MainTex;
 			float4 _MainTex_ST;
-			float ParticleSize;
+			float length;
+			float width;
 
 			float3 GetParticleSize3() {
-				return float3(ParticleSize, ParticleSize, ParticleSize);
+				return float3(width, length, width);
 			}
 
 			FragData MakeFragData(float3 offset, float3 input_WorldPos, float2 uv, float3 particleSize3) {
@@ -112,20 +114,20 @@
 
 				vert2geo input = _input[v];
 
-				float width = 0.1f;
-				float height = 0.4f;
+				float localWidth = 0.5f;
+				float localHeight = 0.5f;
 
 				// Add four vertices to the output stream that will be drawn as a triangle strip making a quad
-				FragData vertex = MakeFragData(float3(-width,-height,0), input.WorldPos, input.uv, ParticleSize3);
+				FragData vertex = MakeFragData(float3(-localWidth,-localHeight,0), input.WorldPos, input.uv, ParticleSize3);
 				OutputStream.Append(vertex);
 
-				vertex = MakeFragData(float3(width,-height,0), input.WorldPos, input.uv, ParticleSize3);
+				vertex = MakeFragData(float3(localWidth,-localHeight,0), input.WorldPos, input.uv, ParticleSize3);
 				OutputStream.Append(vertex);
 
-				vertex = MakeFragData(float3(-width,height,0), input.WorldPos, input.uv, ParticleSize3);
+				vertex = MakeFragData(float3(-localWidth,localHeight,0), input.WorldPos, input.uv, ParticleSize3);
 				OutputStream.Append(vertex);
 
-				vertex = MakeFragData(float3(width, height, 0), input.WorldPos, input.uv, ParticleSize3);
+				vertex = MakeFragData(float3(localWidth, localHeight, 0), input.WorldPos, input.uv, ParticleSize3);
 				OutputStream.Append(vertex);
 
 			}
