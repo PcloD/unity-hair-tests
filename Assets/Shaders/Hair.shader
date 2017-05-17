@@ -59,14 +59,10 @@
 			float length;
 			float width;
 
-			float3 GetParticleSize3() {
-				return float3(width, length, width);
-			}
-
-			FragData MakeFragData(float3 offset, float3 input_WorldPos, float2 uv, float3 particleSize3) {
+			FragData MakeFragData(float3 offset, float3 input_WorldPos, float2 uv) {
 				FragData x = (FragData)0;
 
-				float3 x_WorldPos = mul(UNITY_MATRIX_V, float4(input_WorldPos,1)) + (offset * particleSize3);
+				float3 x_WorldPos = mul(UNITY_MATRIX_V, float4(input_WorldPos,1)) + offset;
 				x.ScreenPos = mul(UNITY_MATRIX_P, float4(x_WorldPos,1));
 				x.uv = uv;
 				return x;
@@ -89,10 +85,8 @@
 				float4 localPos = v.LocalPos;
 				float3 worldPos = mul(unity_ObjectToWorld, localPos);
 
-				float3 particleSize3 = GetParticleSize3();
-
 				FragData o;
-				o = MakeFragData(v.Normal, worldPos, v.uv, particleSize3);
+				o = MakeFragData(v.Normal, worldPos, v.uv);
 
 				return o;
 			}
@@ -109,25 +103,22 @@
 				//	non-shared vertex in triangles is 2nd
 				int v = 1;
 #endif
-				//	get particle size in worldspace
-				float3 ParticleSize3 = GetParticleSize3();
-
 				vert2geo input = _input[v];
 
-				float localWidth = 0.5f;
-				float localHeight = 0.5f;
+				float halfLocalWidth = width * 0.5f;
+				float halfLocalHeight = length * 0.5f;
 
 				// Add four vertices to the output stream that will be drawn as a triangle strip making a quad
-				FragData vertex = MakeFragData(float3(-localWidth,-localHeight,0), input.WorldPos, input.uv, ParticleSize3);
+				FragData vertex = MakeFragData(float3(-halfLocalWidth,-halfLocalHeight,0), input.WorldPos, input.uv);
 				OutputStream.Append(vertex);
 
-				vertex = MakeFragData(float3(localWidth,-localHeight,0), input.WorldPos, input.uv, ParticleSize3);
+				vertex = MakeFragData(float3(halfLocalWidth,-halfLocalHeight,0), input.WorldPos, input.uv);
 				OutputStream.Append(vertex);
 
-				vertex = MakeFragData(float3(-localWidth,localHeight,0), input.WorldPos, input.uv, ParticleSize3);
+				vertex = MakeFragData(float3(-halfLocalWidth, halfLocalHeight,0), input.WorldPos, input.uv);
 				OutputStream.Append(vertex);
 
-				vertex = MakeFragData(float3(localWidth, localHeight, 0), input.WorldPos, input.uv, ParticleSize3);
+				vertex = MakeFragData(float3(halfLocalWidth, halfLocalHeight, 0), input.WorldPos, input.uv);
 				OutputStream.Append(vertex);
 
 			}
