@@ -5,6 +5,8 @@ public class Hair : MonoBehaviour {
     private static int MAXIMUM_INSTANCE_COUNT = 1023;
     public Mesh mesh;
     public Material material;
+    public float hairLength = 0.04f;
+    public float hairWidth = 0.02f;
     private int instanceCount;
     private Matrix4x4[] buffer;
 
@@ -23,7 +25,7 @@ public class Hair : MonoBehaviour {
         for (int index = 0; index <instanceCount; index++) {
             Vector3 pos = surfaceVertices[index];
             Quaternion rotation = Quaternion.identity;
-            Vector3 scale = new Vector3(0.01f, 0.03f, 0.01f);
+            Vector3 scale = new Vector3(hairWidth, hairLength, hairWidth);
 
             Matrix4x4 objectMatrix = gameObject.transform.localToWorldMatrix;
             objectMatrix *= Matrix4x4.Translate(gameObject.transform.localPosition);
