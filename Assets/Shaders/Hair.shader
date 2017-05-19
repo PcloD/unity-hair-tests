@@ -16,13 +16,13 @@
 
 			//	Using geometry shader so target 4.0
 			//	https://docs.unity3d.com/Manual/SL-ShaderCompileTargets.html
-#pragma target 4.0
+			#pragma target 4.0
 
-#pragma vertex vert
-#pragma fragment frag
-#pragma geometry geom
+			#pragma vertex vert
+			#pragma fragment frag
+			#pragma geometry geom
 
-#include "UnityCG.cginc"
+			#include "UnityCG.cginc"
 
 			// Vertex Shader input structure
 			struct appdata_hair_vs {
