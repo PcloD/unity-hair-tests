@@ -18,19 +18,10 @@
 			//	https://docs.unity3d.com/Manual/SL-ShaderCompileTargets.html
 #pragma target 4.0
 
-#pragma shader_feature POINT_TOPOLOGY
-#define GEOMETRY_TRIANGULATION
-
-#ifndef GEOMETRY_TRIANGULATION
-#define VERTEX_TRIANGULATION
-#endif
-
+//#pragma shader_feature POINT_TOPOLOGY
 #pragma vertex vert
 #pragma fragment frag
-
-#ifdef GEOMETRY_TRIANGULATION
 #pragma geometry geom
-#endif
 
 #include "UnityCG.cginc"
 
@@ -73,49 +64,46 @@
 				return fragmentData;
 			}
 
-#ifdef GEOMETRY_TRIANGULATION
 			appdata_hair_gs vert(appdata_hair_vs hairVertex) {
 				return BuildGeometryShaderData(hairVertex.position);
 			}
-#endif
 
-#ifdef VERTEX_TRIANGULATION
-			v2f vert(appdata_hair_vs hairVertex) {
-				float3 objectPos = mul(unity_ObjectToWorld, hairVertex.position);
-				return BuildFragmentShaderData(float3(0,0,0), objectPos, hairVertex.uv);
-			}
-#endif
-
-#ifdef GEOMETRY_TRIANGULATION
-#if POINT_TOPOLOGY
-			[maxvertexcount(4)]
-			void geom(point appdata_hair_gs _input[1], inout TriangleStream<v2f> triangleStream) {
-				int index = 0;
-#else
-			[maxvertexcount(4)]
-			void geom(triangle appdata_hair_gs _input[3], inout TriangleStream<v2f> triangleStream) {
-				//	non-shared vertex in triangles is 2nd
-				int index = 1;
-#endif
-				appdata_hair_gs hairVertex = _input[index];
-
+			void BuildSprite(appdata_hair_gs hairVertex, inout TriangleStream<v2f> triangleStream) {
 				float halfLocalWidth = Width * 0.5f;
 				float halfLocalHeight = Length * 0.5f;
 
 				// Add four vertices to the output stream that will be drawn as a triangle strip making a quad
-				v2f fragmentData = BuildFragmentShaderData(float3(-halfLocalWidth,-halfLocalHeight,0), hairVertex.position, float2(0,0));
+				v2f fragmentData = BuildFragmentShaderData(float3(-halfLocalWidth, -halfLocalHeight, 0), hairVertex.position, float2(0, 0));
 				triangleStream.Append(fragmentData);
 
-				fragmentData = BuildFragmentShaderData(float3(halfLocalWidth,-halfLocalHeight,0), hairVertex.position, float2(1, 0));
+				fragmentData = BuildFragmentShaderData(float3(halfLocalWidth, -halfLocalHeight, 0), hairVertex.position, float2(1, 0));
 				triangleStream.Append(fragmentData);
 
-				fragmentData = BuildFragmentShaderData(float3(-halfLocalWidth, halfLocalHeight,0), hairVertex.position, float2(0, 1));
+				fragmentData = BuildFragmentShaderData(float3(-halfLocalWidth, halfLocalHeight, 0), hairVertex.position, float2(0, 1));
 				triangleStream.Append(fragmentData);
 
 				fragmentData = BuildFragmentShaderData(float3(halfLocalWidth, halfLocalHeight, 0), hairVertex.position, float2(1, 1));
 				triangleStream.Append(fragmentData);
+				triangleStream.RestartStrip();
 			}
-#endif//GEOMETRY_TRIANGULATION
+
+//#if POINT_TOPOLOGY
+			[maxvertexcount(4)]
+			void geom(point appdata_hair_gs _input[1], inout TriangleStream<v2f> triangleStream) {
+				appdata_hair_gs hairVertex = _input[0];
+				BuildSprite(hairVertex, triangleStream);
+			}
+//#else
+//			[maxvertexcount(12)]
+//			void geom(triangle appdata_hair_gs _input[3], inout TriangleStream<v2f> triangleStream) {
+				//	non-shared vertex in triangles is 2nd
+				//appdata_hair_gs hairVertex = _input[1];
+				//BuildSprite(hairVertex, triangleStream);
+				//BuildSprite(_input[0], triangleStream);
+				//BuildSprite(_input[1], triangleStream);
+//				BuildSprite(_input[2], triangleStream);
+//			}
+//#endif
 
 			fixed4 frag(v2f i) : SV_Target{
 				// sample the texture
