@@ -18,7 +18,6 @@
 			//	https://docs.unity3d.com/Manual/SL-ShaderCompileTargets.html
 #pragma target 4.0
 
-//#pragma shader_feature POINT_TOPOLOGY
 #pragma vertex vert
 #pragma fragment frag
 #pragma geometry geom
@@ -87,23 +86,11 @@
 				triangleStream.RestartStrip();
 			}
 
-//#if POINT_TOPOLOGY
 			[maxvertexcount(4)]
 			void geom(point appdata_hair_gs _input[1], inout TriangleStream<v2f> triangleStream) {
 				appdata_hair_gs hairVertex = _input[0];
 				BuildSprite(hairVertex, triangleStream);
 			}
-//#else
-//			[maxvertexcount(12)]
-//			void geom(triangle appdata_hair_gs _input[3], inout TriangleStream<v2f> triangleStream) {
-				//	non-shared vertex in triangles is 2nd
-				//appdata_hair_gs hairVertex = _input[1];
-				//BuildSprite(hairVertex, triangleStream);
-				//BuildSprite(_input[0], triangleStream);
-				//BuildSprite(_input[1], triangleStream);
-//				BuildSprite(_input[2], triangleStream);
-//			}
-//#endif
 
 			fixed4 frag(v2f i) : SV_Target{
 				// sample the texture
