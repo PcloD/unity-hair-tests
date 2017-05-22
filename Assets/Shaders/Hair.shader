@@ -1,6 +1,7 @@
 ﻿Shader "Custom/Hair" {
 	Properties{
 		_MainTex("Texture", 2D) = "white" {}
+		_Colour("Colour", Color) = (0,0,0,1)
 		Length("Length",Range(0.001,1)) = 0.04
 		Width("Width",Range(0.001,1)) = 0.02
 	}
@@ -45,6 +46,7 @@
 			sampler2D _MainTex;
 			float Length;
 			float Width;
+			float4 _Colour;
 
 			appdata_hair_gs BuildGeometryShaderData(float4 position) {
 				appdata_hair_gs geometryShaderData = (appdata_hair_gs)0;
@@ -94,7 +96,8 @@
 
 			fixed4 frag(v2f i) : SV_Target{
 				// sample the texture
-				return tex2D(_MainTex, i.uv);
+				//return tex2D(_MainTex, i.uv);
+				return _Colour;
 			}
 			ENDCG
 		}
