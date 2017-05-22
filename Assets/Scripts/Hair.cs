@@ -13,8 +13,9 @@ public class Hair : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
+        Debug.Log("Creating GPU instances");
         MeshFilter meshRenderer = GetComponent<MeshFilter>();
-        Mesh surfaceMesh = meshRenderer.sharedMesh;
+        Mesh surfaceMesh = meshRenderer.mesh;
 
         Vector3[] surfaceVertices = surfaceMesh.vertices;
         //Vector3[] surfaceVerticesNormals = surfaceMesh.normals;
