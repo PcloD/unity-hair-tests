@@ -29,7 +29,9 @@ public class Hair : MonoBehaviour {
             Vector3 scale = new Vector3(hairWidth, hairLength, hairWidth);
 
             Matrix4x4 objectMatrix = gameObject.transform.localToWorldMatrix;
-            objectMatrix *= Matrix4x4.Translate(gameObject.transform.localPosition);
+            // Offset the hair by the half length to 'anchor' the object at the top
+            Vector3 translation = gameObject.transform.localPosition + new Vector3(0, -(hairLength/2), 0);
+            objectMatrix *= Matrix4x4.Translate(translation);
 
             Matrix4x4 theMatrix = Matrix4x4.TRS(pos, rotation, scale);
             objectMatrix *= theMatrix;

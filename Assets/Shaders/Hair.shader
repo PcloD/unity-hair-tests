@@ -32,13 +32,16 @@
 			float4 _Colour;
 
 			appdata_hair_gs vert(appdata_hair_vs hairVertex) {
-				return BuildGeometryShaderData(hairVertex.position);
+				return BuildGeometryShaderData(hairVertex.position, hairVertex.normal);
 			}
 
 			[maxvertexcount(4)]
 			void geom(point appdata_hair_gs _input[1], inout TriangleStream<v2f> triangleStream) {
 				appdata_hair_gs hairVertex = _input[0];
-				BuildSprite(hairVertex.position, _Width, _Length, triangleStream);
+				//float3 direction = hairVertex.normal;
+				//float3 direction = cross(float3(0, -1, 0), hairVertex.normal);
+				float3 direction = (float3(0,-1,0) + hairVertex.normal) / 2;
+				BuildSprite(hairVertex.position, _Width, _Length, direction, triangleStream);
 			}
 
 			fixed4 frag(v2f i) : SV_Target{
