@@ -1,15 +1,17 @@
 ﻿Shader "Custom/Hair2" {
 	Properties{
-		_MainTex("Texture", 2D) = "white" {}
+		_TransparencyMask("Hair Transparency Mask", 2D) = "white" {}
+		_Colour("Colour", Color) = (0,0,0,1)
 		Length("Length",Range(0.001,1)) = 0.04
 		Width("Width",Range(0.001,1)) = 0.02
 	}
 
 	SubShader{
-		Tags{ "RenderType" = "Opaque" }
+		Tags{ "Queue" = "Transparent" "RenderType" = "Transparent" "IgnoreProjector" = "True" }
 		LOD 100
 		Cull off
-		Blend off
+		ZWrite Off
+		Blend SrcAlpha OneMinusSrcAlpha // Traditional transparency
 
 		Pass{
 			CGPROGRAM
@@ -42,9 +44,10 @@
 			};
 
 
-			sampler2D _MainTex;
+			sampler2D _TransparencyMask;
 			float Length;
 			float Width;
+			float4 _Colour;
 
 			appdata_hair_gs BuildGeometryShaderData(float4 position) {
 				appdata_hair_gs geometryShaderData = (appdata_hair_gs)0;
@@ -107,7 +110,11 @@
 
 			fixed4 frag(v2f i) : SV_Target{
 				// sample the texture
-				return tex2D(_MainTex, i.uv);
+				float4 transparencyMask = tex2D(_TransparencyMask, i.uv);
+				float3 colour = _Colour.xyz;
+
+				//return float4(colour.xyz * transparencyMask.xyz, transparencyMask.x);
+				return float4(colour.xyz, transparencyMask.x);
 			}
 			ENDCG
 		}
