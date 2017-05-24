@@ -32,7 +32,7 @@
 			float4 _Colour;
 
 			appdata_hair_gs vert(appdata_hair_vs hairVertex) {
-				return BuildGeometryShaderData(hairVertex.position, hairVertex.normal);
+				return BuildGeometryShaderData(hairVertex.position, hairVertex.normal, hairVertex.tangent);
 			}
 
 			[maxvertexcount(4)]
@@ -40,8 +40,10 @@
 				appdata_hair_gs hairVertex = _input[0];
 				//float3 direction = hairVertex.normal;
 				//float3 direction = cross(float3(0, -1, 0), hairVertex.normal);
-				float3 direction = (float3(0,-1,0) + hairVertex.normal) / 2;
-				BuildSprite(hairVertex.position, _Width, _Length, direction, triangleStream);
+				//float3 direction = (float3(0,-1,0) + hairVertex.normal) / 2;
+				//float3 direction = cross(hairVertex.normal, hairVertex.tangent);
+				float3 direction = (hairVertex.normal.y > 0 ? cross(hairVertex.normal, hairVertex.tangent) : float3(0,-1,0));
+				BuildSprite(hairVertex.position, _Width, _Length, direction, hairVertex.tangent, triangleStream);
 			}
 
 			fixed4 frag(v2f i) : SV_Target{
