@@ -26,6 +26,9 @@
 
 			#include "Hair.cginc"
 
+			//#define USE_NORMAL_FOR_DIRECTION
+			//#define USE_TANGENT_FOR_DIRECTION
+
 			sampler2D _TransparencyMask;
 			float _Length;
 			float _Width;
@@ -39,10 +42,14 @@
 				float3 position = hairVertex1.position + ((hairVertex2.position - hairVertex1.position) * 0.5f);
 				float3 normal = (hairVertex1.normal + hairVertex2.normal) / 2;
 				float3 tangent = (hairVertex1.tangent + hairVertex2.tangent) / 2;
-				//float3 direction = tangent;
+#if defined(USE_NORMAL_FOR_DIRECTION)
+				float3 direction = hairVertex1.normal;
+#elif defined(USE_TANGENT_FOR_DIRECTION)
+				float3 direction = tangent;
+#else
 				//float3 direction = cross(normal, tangent);
 				float3 direction = (normal.y > 0 ? cross(normal, tangent) : float3(0, -1, 0));
-				//float3 direction = hairVertex1.normal;
+#endif
 				BuildSprite(position, _Width, _Length, direction, tangent, triangleStream);
 			}
 
@@ -50,10 +57,14 @@
 				float3 position = GetTriangleCenter(hairVertices);
 				float3 normal = (hairVertices[0].normal + hairVertices[1].normal + hairVertices[2].normal) / 3;
 				float3 tangent = (hairVertices[0].tangent + hairVertices[1].tangent + hairVertices[2].tangent) / 3;
-				//float3 direction = tangent;
-				float3 crossTangentXAxis = cross(tangent, float3(1, 0, 0));
+#if defined(USE_NORMAL_FOR_DIRECTION)
+				float3 direction = normal;
+#elif defined(USE_TANGENT_FOR_DIRECTION)
+				float3 direction = tangent;
+#else
 				//float3 direction = cross(normal, tangent);
 				float3 direction = (normal.y > 0 ? cross(normal, tangent) : float3(0, -1, 0));
+#endif
 				BuildSprite(position, _Width, _Length, direction, tangent, triangleStream);
 			}
 

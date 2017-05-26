@@ -26,6 +26,9 @@
 
 			#include "Hair.cginc"
 
+			//#define USE_NORMAL_FOR_DIRECTION
+			//#define USE_TANGENT_FOR_DIRECTION
+
 			sampler2D _TransparencyMask;
 			float _Length;
 			float _Width;
@@ -38,11 +41,15 @@
 			[maxvertexcount(4)]
 			void geom(point appdata_hair_gs _input[1], inout TriangleStream<v2f> triangleStream) {
 				appdata_hair_gs hairVertex = _input[0];
-				//float3 direction = hairVertex.normal;
-				//float3 direction = cross(float3(0, -1, 0), hairVertex.normal);
-				//float3 direction = (float3(0,-1,0) + hairVertex.normal) / 2;
+#if defined(USE_NORMAL_FOR_DIRECTION)
+				float3 direction = hairVertex.normal;
+
+#elif defined(USE_TANGENT_FOR_DIRECTION)
+				float3 direction = hairVertex.tangent;
+#else
 				//float3 direction = cross(hairVertex.normal, hairVertex.tangent);
 				float3 direction = (hairVertex.normal.y > 0 ? cross(hairVertex.normal, hairVertex.tangent) : float3(0,-1,0));
+#endif
 				BuildSprite(hairVertex.position, _Width, _Length, direction, hairVertex.tangent, triangleStream);
 			}
 
