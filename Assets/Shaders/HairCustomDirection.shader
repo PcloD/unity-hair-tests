@@ -29,6 +29,7 @@
 
 			//#define USE_NORMAL_FOR_DIRECTION
 			//#define USE_TANGENT_FOR_DIRECTION
+			#define APPLY_TRANSPARENCY_MASK_TO_COLOUR
 
 			sampler2D _TransparencyMask;
 			float _Length;
@@ -84,8 +85,11 @@
 				float4 transparencyMask = tex2D(_TransparencyMask, i.uv);
 				float3 colour = _Colour.xyz;
 
-				//return float4(colour.xyz * transparencyMask.xyz, transparencyMask.x);
+#if defined(APPLY_TRANSPARENCY_MASK_TO_COLOUR)
+				return float4(colour.xyz * transparencyMask.xyz, transparencyMask.x);
+#else
 				return float4(colour.xyz, transparencyMask.x);
+#endif
 			}
 			ENDCG
 		}
