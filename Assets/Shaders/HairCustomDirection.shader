@@ -4,7 +4,11 @@
 		_Colour("Colour", Color) = (0,0,0,1)
 		_Length("Length",Range(0.001,1)) = 0.04
 		_Width("Width",Range(0.001,1)) = 0.02
-		_Direction("Direction", Vector) = (0,0,0,1) 
+		[Toggle(ENABLE_EDGE_SPRITES)]
+		_EnableEdgeSprites("Enable Edge Sprites", float) = 1
+		[Toggle(ENABLE_CENTER_SPRITE)]
+		_EnableCenterSprite("Enable Center Sprites", float) = 1
+		_Direction("Direction", Vector) = (0,0,0,1)
 	}
 
 	SubShader{
@@ -30,6 +34,9 @@
 			//#define USE_NORMAL_FOR_DIRECTION
 			//#define USE_TANGENT_FOR_DIRECTION
 			#define APPLY_TRANSPARENCY_MASK_TO_COLOUR
+			#pragma shader_feature ENABLE_EDGE_SPRITES
+			#pragma shader_feature ENABLE_CENTER_SPRITE
+
 
 			sampler2D _TransparencyMask;
 			float _Length;
@@ -74,10 +81,15 @@
 
 			[maxvertexcount(16)]
 			void geom(triangle appdata_hair_gs _input[3], inout TriangleStream<v2f> triangleStream) {
+#if defined(ENABLE_EDGE_SPRITES)
 				AddEdgeVertexToTriangleStream(_input[0], _input[1], triangleStream);
 				AddEdgeVertexToTriangleStream(_input[0], _input[2], triangleStream);
 				AddEdgeVertexToTriangleStream(_input[2], _input[1], triangleStream);
+#endif
+
+#if defined(ENABLE_CENTER_SPRITE)
 				AddTriangleCenterVertexToTriangleStream(_input, triangleStream);
+#endif
 			}
 
 			fixed4 frag(v2f i) : SV_Target{
