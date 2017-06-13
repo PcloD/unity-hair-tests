@@ -31,8 +31,6 @@
 
 			#include "Hair.cginc"
 
-			//#define USE_NORMAL_FOR_DIRECTION
-			//#define USE_TANGENT_FOR_DIRECTION
 			#define APPLY_TRANSPARENCY_MASK_TO_COLOUR
 			#pragma shader_feature ENABLE_EDGE_SPRITES
 			#pragma shader_feature ENABLE_CENTER_SPRITE
@@ -48,33 +46,87 @@
 				return BuildGeometryShaderData(hairVertex.position, hairVertex.normal, hairVertex.tangent);
 			}
 
-			void AddEdgeVertexToTriangleStream(appdata_hair_gs hairVertex1, appdata_hair_gs hairVertex2, inout TriangleStream<v2f> triangleStream) {
+			float3 FaceTangent(appdata_hair_gs hairVertices[3]) {
+				float3 atob = hairVertices[0].position - hairVertices[1].position;
+				float3 atoc = hairVertices[2].position - hairVertices[1].position;
+
+				float3 facenormal = cross(atob, atoc);
+				return cross(facenormal, float3(0, 1, 0));
+
+				/*
+				if (abs(atob.x) < 0.001f && abs(atob.z) < 0.001f) {
+					return float3(atoc.x, 0, atoc.z);
+				}
+				else if (abs(atoc.x) < 0.001f && abs(atoc.z) < 0.001f) {
+					return float3(atob.x, 0, atob.z);
+				}
+				*/
+				if (length(atob) > length(atoc)) {
+					return float3(atob.x, 0, atob.z);
+				}
+
+
+				return float3(atoc.x, 0, atoc.z);
+
+				//return float3(max(abs(atob.x), abs(atoc.x)), 0, max(abs(atob.z), abs(atoc.z)));
+
+				/*
+				if (atob.x > atoc.x) {
+					return float3(atob.x, 0, atob.z);
+				}
+
+				return float3(atoc.x, 0, atoc.z);
+				*/
+
+				/*
+				if (atob.x > atoc.x) {
+					if (atob.z > atoc.z) {
+						return float3(atob.z, 0, atob.x);
+					}
+					else {
+						return float3(atob.x, 0, atob.z);
+					}
+				}
+				else {
+					if (atob.z > atoc.z) {
+						return float3(atoc.x, 0, atoc.z);
+					}
+					else {
+						return float3(atoc.z, 0, atoc.x);
+					}
+				}
+				*/
+			}
+
+
+			void AddEdgeVertexToTriangleStream(appdata_hair_gs hairVertex1, appdata_hair_gs hairVertex2, float3 tangent, inout TriangleStream<v2f> triangleStream) {
 				float3 position = hairVertex1.position + ((hairVertex2.position - hairVertex1.position) * 0.5f);
-				float3 normal = (hairVertex1.normal + hairVertex2.normal) / 2;
-				float3 tangent = (hairVertex1.tangent + hairVertex2.tangent) / 2;
-#if defined(USE_NORMAL_FOR_DIRECTION)
-				float3 direction = hairVertex1.normal;
-#elif defined(USE_TANGENT_FOR_DIRECTION)
-				float3 direction = tangent;
-#else
+				//float3 normal = (hairVertex1.normal + hairVertex2.normal) / 2;
+
 				//float3 direction = _Direction.xyz;
 				float3 direction = normalize(_Direction.xyz);
-#endif
 				BuildSprite(position, _Width, _Length, direction, tangent, triangleStream);
+			}
+
+			void AddEdgeVerticesToTriangleStream(appdata_hair_gs hairVertices[3], inout TriangleStream<v2f> triangleStream) {
+				float3 tangent = FaceTangent(hairVertices);
+				tangent = normalize(tangent);
+
+				AddEdgeVertexToTriangleStream(hairVertices[0], hairVertices[1], tangent, triangleStream);
+				AddEdgeVertexToTriangleStream(hairVertices[0], hairVertices[2], tangent, triangleStream);
+				AddEdgeVertexToTriangleStream(hairVertices[2], hairVertices[1], tangent, triangleStream);
 			}
 
 			void AddTriangleCenterVertexToTriangleStream(appdata_hair_gs hairVertices[3], inout TriangleStream<v2f> triangleStream) {
 				float3 position = GetTriangleCenter(hairVertices);
-				float3 normal = (hairVertices[0].normal + hairVertices[1].normal + hairVertices[2].normal) / 3;
-				float3 tangent = (hairVertices[0].tangent + hairVertices[1].tangent + hairVertices[2].tangent) / 3;
-#if defined(USE_NORMAL_FOR_DIRECTION)
-				float3 direction = normal;
-#elif defined(USE_TANGENT_FOR_DIRECTION)
-				float3 direction = tangent;
-#else
+				//float3 normal = (hairVertices[0].normal + hairVertices[1].normal + hairVertices[2].normal) / 3;
+
+				float3 tangent = FaceTangent(hairVertices);
+				tangent = normalize(tangent);
+
 				//float3 direction = _Direction.xyz;
 				float3 direction = normalize(_Direction.xyz);
-#endif
+
 				BuildSprite(position, _Width, _Length, direction, tangent, triangleStream);
 			}
 
@@ -82,9 +134,7 @@
 			[maxvertexcount(16)]
 			void geom(triangle appdata_hair_gs _input[3], inout TriangleStream<v2f> triangleStream) {
 #if defined(ENABLE_EDGE_SPRITES)
-				AddEdgeVertexToTriangleStream(_input[0], _input[1], triangleStream);
-				AddEdgeVertexToTriangleStream(_input[0], _input[2], triangleStream);
-				AddEdgeVertexToTriangleStream(_input[2], _input[1], triangleStream);
+				AddEdgeVerticesToTriangleStream(_input, triangleStream);
 #endif
 
 #if defined(ENABLE_CENTER_SPRITE)
