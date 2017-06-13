@@ -114,7 +114,7 @@ void BuildSprite(float3 position, float width, float height, float3 direction, f
 	BuildSpriteVertex(float3(-halfLocalWidth, -(height - yOffset), 0), position, direction, float2(0, 0), triangleStream);
 	BuildSpriteVertex(float3(halfLocalWidth, -(height - yOffset), 0), position, direction, float2(1, 0), triangleStream);
 #endif
-
+	triangleStream.RestartStrip();
 }
 
 
