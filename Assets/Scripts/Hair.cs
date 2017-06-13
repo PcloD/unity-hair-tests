@@ -21,6 +21,8 @@ public class Hair : MonoBehaviour {
         //Vector3[] surfaceVerticesNormals = surfaceMesh.normals;
         instanceCount = surfaceMesh.vertexCount < MAXIMUM_INSTANCE_COUNT ? surfaceMesh.vertexCount : MAXIMUM_INSTANCE_COUNT;
 
+        Debug.Log("Instance count: "+instanceCount);
+
         buffer = new Matrix4x4[instanceCount]; 
 
         for (int index = 0; index <instanceCount; index++) {
@@ -30,7 +32,7 @@ public class Hair : MonoBehaviour {
 
             Matrix4x4 objectMatrix = gameObject.transform.localToWorldMatrix;
             // Offset the hair by the half length to 'anchor' the object at the top
-            Vector3 translation = gameObject.transform.localPosition + new Vector3(0, -(hairLength/2), 0);
+            Vector3 translation = new Vector3(0, -(hairLength/2), 0);
             objectMatrix *= Matrix4x4.Translate(translation);
 
             Matrix4x4 theMatrix = Matrix4x4.TRS(pos, rotation, scale);
