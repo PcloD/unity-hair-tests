@@ -79,6 +79,20 @@ v2f BuildFragmentShaderData(float3 vertexLocalPosition, float3 position, float3 
 }
 
 
+float3 GetFaceNormal(appdata_hair_gs hairVertices[3]) {
+	float3 atob = hairVertices[0].position - hairVertices[1].position;
+	float3 atoc = hairVertices[2].position - hairVertices[1].position;
+
+	float3 faceNormal = cross(atob, atoc);
+	return normalize(faceNormal);
+}
+
+
+float3 GetFaceTangent(float3 faceNormal) {
+	float3 tangent = cross(faceNormal, float3(0, 1, 0));
+	return normalize(tangent);
+}
+
 float3 GetTriangleCenter(appdata_hair_gs _input[3]) {
 	return (_input[0].position + _input[1].position + _input[2].position) / 3;
 }

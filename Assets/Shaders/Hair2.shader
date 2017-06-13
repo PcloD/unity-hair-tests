@@ -48,7 +48,7 @@
 			void AddEdgeVertexToTriangleStream(appdata_hair_gs hairVertex1, appdata_hair_gs hairVertex2, inout TriangleStream<v2f> triangleStream) {
 				float3 position = hairVertex1.position + ((hairVertex2.position - hairVertex1.position) * 0.5f);
 				float3 normal = (hairVertex1.normal + hairVertex2.normal) / 2;
-				float3 tangent = (hairVertex1.tangent + hairVertex2.tangent) / 2;
+				float3 tangent = GetFaceTangent(normal);
 #if defined(USE_NORMAL_FOR_DIRECTION)
 				float3 direction = hairVertex1.normal;
 #elif defined(USE_TANGENT_FOR_DIRECTION)
@@ -63,7 +63,7 @@
 			void AddTriangleCenterVertexToTriangleStream(appdata_hair_gs hairVertices[3], inout TriangleStream<v2f> triangleStream) {
 				float3 position = GetTriangleCenter(hairVertices);
 				float3 normal = (hairVertices[0].normal + hairVertices[1].normal + hairVertices[2].normal) / 3;
-				float3 tangent = (hairVertices[0].tangent + hairVertices[1].tangent + hairVertices[2].tangent) / 3;
+				float3 tangent = GetFaceTangent(normal);
 #if defined(USE_NORMAL_FOR_DIRECTION)
 				float3 direction = normal;
 #elif defined(USE_TANGENT_FOR_DIRECTION)

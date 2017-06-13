@@ -46,71 +46,16 @@
 				return BuildGeometryShaderData(hairVertex.position, hairVertex.normal, hairVertex.tangent);
 			}
 
-			float3 FaceTangent(appdata_hair_gs hairVertices[3]) {
-				float3 atob = hairVertices[0].position - hairVertices[1].position;
-				float3 atoc = hairVertices[2].position - hairVertices[1].position;
-
-				float3 facenormal = cross(atob, atoc);
-				return cross(facenormal, float3(0, 1, 0));
-
-				/*
-				if (abs(atob.x) < 0.001f && abs(atob.z) < 0.001f) {
-					return float3(atoc.x, 0, atoc.z);
-				}
-				else if (abs(atoc.x) < 0.001f && abs(atoc.z) < 0.001f) {
-					return float3(atob.x, 0, atob.z);
-				}
-				*/
-				if (length(atob) > length(atoc)) {
-					return float3(atob.x, 0, atob.z);
-				}
-
-
-				return float3(atoc.x, 0, atoc.z);
-
-				//return float3(max(abs(atob.x), abs(atoc.x)), 0, max(abs(atob.z), abs(atoc.z)));
-
-				/*
-				if (atob.x > atoc.x) {
-					return float3(atob.x, 0, atob.z);
-				}
-
-				return float3(atoc.x, 0, atoc.z);
-				*/
-
-				/*
-				if (atob.x > atoc.x) {
-					if (atob.z > atoc.z) {
-						return float3(atob.z, 0, atob.x);
-					}
-					else {
-						return float3(atob.x, 0, atob.z);
-					}
-				}
-				else {
-					if (atob.z > atoc.z) {
-						return float3(atoc.x, 0, atoc.z);
-					}
-					else {
-						return float3(atoc.z, 0, atoc.x);
-					}
-				}
-				*/
-			}
-
 
 			void AddEdgeVertexToTriangleStream(appdata_hair_gs hairVertex1, appdata_hair_gs hairVertex2, float3 tangent, inout TriangleStream<v2f> triangleStream) {
 				float3 position = hairVertex1.position + ((hairVertex2.position - hairVertex1.position) * 0.5f);
-				//float3 normal = (hairVertex1.normal + hairVertex2.normal) / 2;
-
-				//float3 direction = _Direction.xyz;
 				float3 direction = normalize(_Direction.xyz);
 				BuildSprite(position, _Width, _Length, direction, tangent, triangleStream);
 			}
 
 			void AddEdgeVerticesToTriangleStream(appdata_hair_gs hairVertices[3], inout TriangleStream<v2f> triangleStream) {
-				float3 tangent = FaceTangent(hairVertices);
-				tangent = normalize(tangent);
+				float3 normal = GetFaceNormal(hairVertices);
+				float3 tangent = GetFaceTangent(normal);
 
 				AddEdgeVertexToTriangleStream(hairVertices[0], hairVertices[1], tangent, triangleStream);
 				AddEdgeVertexToTriangleStream(hairVertices[0], hairVertices[2], tangent, triangleStream);
@@ -119,10 +64,8 @@
 
 			void AddTriangleCenterVertexToTriangleStream(appdata_hair_gs hairVertices[3], inout TriangleStream<v2f> triangleStream) {
 				float3 position = GetTriangleCenter(hairVertices);
-				//float3 normal = (hairVertices[0].normal + hairVertices[1].normal + hairVertices[2].normal) / 3;
-
-				float3 tangent = FaceTangent(hairVertices);
-				tangent = normalize(tangent);
+				float3 normal = GetFaceNormal(hairVertices);
+				float3 tangent = GetFaceTangent(normal);
 
 				//float3 direction = _Direction.xyz;
 				float3 direction = normalize(_Direction.xyz);

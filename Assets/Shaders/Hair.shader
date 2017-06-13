@@ -52,7 +52,8 @@
 				//float3 direction = cross(hairVertex.normal, hairVertex.tangent);
 				float3 direction = (hairVertex.normal.y > 0 ? cross(hairVertex.normal, hairVertex.tangent) : float3(0,-1,0));
 #endif
-				BuildSprite(hairVertex.position, _Width, _Length, direction, hairVertex.tangent, triangleStream);
+				float3 tangent = GetFaceTangent(hairVertex.normal);
+				BuildSprite(hairVertex.position, _Width, _Length, direction, tangent, triangleStream);
 			}
 
 			fixed4 frag(v2f i) : SV_Target{
