@@ -19,20 +19,23 @@ struct appdata_hair_gs {
 	float4 position : POSITION;
 	float3 normal: NORMAL;
 	float4 tangent : TANGENT;
+	float2 uv : TEXCOORD0;
 };
 
 // Fragment Shader input structure
 struct v2f {
 	float4 screenPosition : SV_POSITION;
 	float2 uv : TEXCOORD0;
+	float2 hairuv : TEXCOORD1;
 };
 
 
-appdata_hair_gs BuildGeometryShaderData(float4 position, float3 normal, float4 tangent) {
+appdata_hair_gs BuildGeometryShaderData(float4 position, float3 normal, float4 tangent, float2 uv) {
 	appdata_hair_gs geometryShaderData = (appdata_hair_gs)0;
 	geometryShaderData.position = position;
 	geometryShaderData.normal = normal;
 	geometryShaderData.tangent = tangent;
+	geometryShaderData.uv = uv;
 	return geometryShaderData;
 }
 
@@ -63,7 +66,7 @@ float3 RotatePointAboutDirectionVector(float3 position, float3 direction) {
 
 
 
-v2f BuildFragmentShaderData(float3 vertexLocalPosition, float3 position, float3 direction, float2 uv) {
+v2f BuildFragmentShaderData(float3 vertexLocalPosition, float3 position, float3 direction, float2 uv, float2 hairuv) {
 	v2f fragmentData = (v2f)0;
 
 #if defined(ENABLE_ROTATION_ABOUT_DIRECTION)
@@ -75,6 +78,7 @@ v2f BuildFragmentShaderData(float3 vertexLocalPosition, float3 position, float3 
 
 	fragmentData.screenPosition = mul(UNITY_MATRIX_P, float4(worldPos, 1));
 	fragmentData.uv = uv;
+	fragmentData.hairuv = hairuv;
 	return fragmentData;
 }
 
@@ -98,7 +102,7 @@ float3 GetTriangleCenter(appdata_hair_gs _input[3]) {
 }
 
 
-void BuildSpriteVertex(float3 vertexLocalPosition, float3 position, float3 direction, float2 uv, inout TriangleStream<v2f> triangleStream) {
+void BuildSpriteVertex(float3 vertexLocalPosition, float3 position, float3 direction, float2 uv, float2 hairuv, inout TriangleStream<v2f> triangleStream) {
 #if defined(ENABLE_ROTATION_ABOUT_DIRECTION)
 	float3 newVertexLocalPosition = (direction.y < -0.99f ? vertexLocalPosition : RotatePointAboutDirectionVector(vertexLocalPosition, direction));
 	newVertexLocalPosition = newVertexLocalPosition + position;
@@ -107,26 +111,26 @@ void BuildSpriteVertex(float3 vertexLocalPosition, float3 position, float3 direc
 	float3 newVertexLocalPosition = vertexLocalPosition;
 	position = mul(unity_ObjectToWorld, float4(position, 1));
 #endif
-	v2f fragmentData = BuildFragmentShaderData(newVertexLocalPosition, position, direction, uv);
+	v2f fragmentData = BuildFragmentShaderData(newVertexLocalPosition, position, direction, uv, hairuv);
 	triangleStream.Append(fragmentData);
 }
 
 
-void BuildSprite(float3 position, float width, float height, float3 direction, float3 tangent, inout TriangleStream<v2f> triangleStream) {
+void BuildSprite(float3 position, float width, float height, float3 direction, float3 tangent, float2 hairuv, inout TriangleStream<v2f> triangleStream) {
 	float halfLocalWidth = width * 0.5f;
 	float yOffset = 0.001f;
 
 #if defined(APPLY_TANGENT_ROTATION_TO_OFFSET)
 	// Add four vertices to the output stream that will be drawn as a triangle strip making a quad
-	BuildSpriteVertex(float3(-halfLocalWidth*tangent.x, yOffset, -halfLocalWidth*tangent.z), position, direction, float2(0, 1), triangleStream);
-	BuildSpriteVertex(float3(halfLocalWidth*tangent.x, yOffset, halfLocalWidth*tangent.z), position, direction, float2(1, 1), triangleStream);
-	BuildSpriteVertex(float3(-halfLocalWidth*tangent.x, -(height - yOffset), -halfLocalWidth*tangent.z), position, direction, float2(0, 0), triangleStream);
-	BuildSpriteVertex(float3(halfLocalWidth*tangent.x, -(height - yOffset), halfLocalWidth*tangent.z), position, direction, float2(1, 0), triangleStream);
+	BuildSpriteVertex(float3(-halfLocalWidth*tangent.x, yOffset, -halfLocalWidth*tangent.z), position, direction, float2(0, 1), hairuv, triangleStream);
+	BuildSpriteVertex(float3(halfLocalWidth*tangent.x, yOffset, halfLocalWidth*tangent.z), position, direction, float2(1, 1), hairuv, triangleStream);
+	BuildSpriteVertex(float3(-halfLocalWidth*tangent.x, -(height - yOffset), -halfLocalWidth*tangent.z), position, direction, float2(0, 0), hairuv, triangleStream);
+	BuildSpriteVertex(float3(halfLocalWidth*tangent.x, -(height - yOffset), halfLocalWidth*tangent.z), position, direction, float2(1, 0), hairuv, triangleStream);
 #else
-	BuildSpriteVertex(float3(-halfLocalWidth, yOffset, 0), position, direction, float2(0, 1), triangleStream);
-	BuildSpriteVertex(float3(halfLocalWidth, yOffset, 0), position, direction, float2(1, 1), triangleStream);
-	BuildSpriteVertex(float3(-halfLocalWidth, -(height - yOffset), 0), position, direction, float2(0, 0), triangleStream);
-	BuildSpriteVertex(float3(halfLocalWidth, -(height - yOffset), 0), position, direction, float2(1, 0), triangleStream);
+	BuildSpriteVertex(float3(-halfLocalWidth, yOffset, 0), position, direction, float2(0, 1), hairuv, triangleStream);
+	BuildSpriteVertex(float3(halfLocalWidth, yOffset, 0), position, direction, float2(1, 1), hairuv, triangleStream);
+	BuildSpriteVertex(float3(-halfLocalWidth, -(height - yOffset), 0), position, direction, float2(0, 0), hairuv, triangleStream);
+	BuildSpriteVertex(float3(halfLocalWidth, -(height - yOffset), 0), position, direction, float2(1, 0), hairuv, triangleStream);
 #endif
 	triangleStream.RestartStrip();
 }
